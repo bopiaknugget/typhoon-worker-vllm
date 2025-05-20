@@ -43,6 +43,7 @@ ENV PYTHONPATH="/:/vllm-workspace"
 # Download model using git-lfs
 RUN mkdir -p $BASE_PATH && \
     python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='$MODEL_ID', local_dir='$BASE_PATH', local_dir_use_symlinks=False, cache_dir='$HF_HOME')
+    
 # Application setup
 COPY src /src
 
