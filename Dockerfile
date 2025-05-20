@@ -1,50 +1,45 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu22.04 
+FROM nvidia/cuda:12.1.0-base-ubuntu22.04
 
-RUN apt-get update -y \
-    && apt-get install -y python3-pip
+# System dependencies
+RUN apt-get update -y && \
+    apt-get install -y python3-pip libgl1
 
+# CUDA compatibility
 RUN ldconfig /usr/local/cuda-12.1/compat/
 
-# Install Python dependencies
+# Python environment
 COPY builder/requirements.txt /requirements.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python3 -m pip install --upgrade pip && \
+RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --upgrade -r /requirements.txt
 
-# Install vLLM (switching back to pip installs since issues that required building fork are fixed and space optimization is not as important since caching) and FlashInfer 
-RUN python3 -m pip install vllm==0.8.5 && \
-    python3 -m pip install flashinfer -i https://flashinfer.ai/whl/cu121/torch2.3
+# Quantization dependencies
+RUN python3 -m pip install \
+    vllm==0.8.5 \
+    flashinfer \
+    bitsandbytes>=0.45.3 -i https://flashinfer.ai/whl/cu121/torch2.3 \
+    huggingface_hub
 
-# Setup for Option 2: Building the Image with the Model included
-ARG MODEL_NAME=""
-ARG TOKENIZER_NAME=""
-ARG BASE_PATH="/runpod-volume"
-ARG QUANTIZATION=""
-ARG MODEL_REVISION=""
-ARG TOKENIZER_REVISION=""
+# Model configuration
+ARG BASE_PATH="/model"
+ARG MODEL_ID="scb10x/typhoon2.1-gemma3-4b"
+ARG HF_TOKEN=hf_YOUR_TOKEN_HERE
+ENV MODEL_NAME=$MODEL_ID \
+    VLLM_MODEL_PATH=$BASE_PATH \
+    VLLM_DTYPE="bfloat16" \
+    QUANTIZATION="bitsandbytes" \
+    HF_HOME="$BASE_PATH/huggingface-cache" \
+    VLLM_GPU_MEMORY_UTILIZATION=0.95 \
+    VLLM_MAX_MODEL_LEN=4096
 
-ENV MODEL_NAME=$MODEL_NAME \
-    MODEL_REVISION=$MODEL_REVISION \
-    TOKENIZER_NAME=$TOKENIZER_NAME \
-    TOKENIZER_REVISION=$TOKENIZER_REVISION \
-    BASE_PATH=$BASE_PATH \
-    QUANTIZATION=$QUANTIZATION \
-    HF_DATASETS_CACHE="${BASE_PATH}/huggingface-cache/datasets" \
-    HUGGINGFACE_HUB_CACHE="${BASE_PATH}/huggingface-cache/hub" \
-    HF_HOME="${BASE_PATH}/huggingface-cache/hub" \
-    HF_HUB_ENABLE_HF_TRANSFER=0 
+# Download model directly without cache optimizations
+RUN mkdir -p $BASE_PATH && \
+    python3 -c "from huggingface_hub import snapshot_download; \
+    snapshot_download(repo_id='$MODEL_ID', \
+    local_dir='$BASE_PATH', \
+    token='$HF_TOKEN')"
 
-ENV PYTHONPATH="/:/vllm-workspace"
-
-
+# Application setup
 COPY src /src
-RUN --mount=type=secret,id=HF_TOKEN,required=false \
-    if [ -f /run/secrets/HF_TOKEN ]; then \
-    export HF_TOKEN=$(cat /run/secrets/HF_TOKEN); \
-    fi && \
-    if [ -n "$MODEL_NAME" ]; then \
-    python3 /src/download_model.py; \
-    fi
 
-# Start the handler
+# Simplified command without parameters
 CMD ["python3", "/src/handler.py"]
