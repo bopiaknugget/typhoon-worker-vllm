@@ -12,6 +12,8 @@ COPY builder/requirements.txt /requirements.txt
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install --upgrade -r /requirements.txt
 
+RUN mkdir model
+
 # Quantization dependencies
 RUN python3 -m pip install \
     vllm==0.8.5 \
