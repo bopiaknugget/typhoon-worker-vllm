@@ -29,11 +29,11 @@ ENV MODEL_NAME=$MODEL_NAME \
     TOKENIZER_NAME=$TOKENIZER_NAME \
     TOKENIZER_REVISION=$TOKENIZER_REVISION \
     BASE_PATH=$BASE_PATH \
-    MAX_MODEL_LEN = 4096 \
-    LOAD_FORMAT = safetensors \
-    DEVICE = cuda \
+    MAX_MODEL_LEN=4096 \
+    LOAD_FORMAT=safetensors \
+    DEVICE=cuda \
     QUANTIZATION=$QUANTIZATION \
-    GPU_MEMORY_UTILIZATION = 0.95 \
+    GPU_MEMORY_UTILIZATION=0.95 \
     HF_DATASETS_CACHE="${BASE_PATH}/huggingface-cache/datasets" \
     HUGGINGFACE_HUB_CACHE="${BASE_PATH}/huggingface-cache/hub" \
     HF_HOME="${BASE_PATH}/huggingface-cache/hub" \
@@ -42,7 +42,7 @@ ENV MODEL_NAME=$MODEL_NAME \
 ENV PYTHONPATH="/:/vllm-workspace"
 # Download model using git-lfs
 RUN mkdir -p $BASE_PATH && \
-    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='$MODEL_ID', local_dir='$BASE_PATH', local_dir_use_symlinks=False, cache_dir='$HF_HOME')
+    python3 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='$MODEL_ID', local_dir='$BASE_PATH', local_dir_use_symlinks=False, cache_dir='$HF_HOME')"
     
 # Application setup
 COPY src /src
