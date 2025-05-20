@@ -31,7 +31,7 @@ ENV MODEL_NAME=$MODEL_ID \
 # Download model using git-lfs
 RUN mkdir -p $BASE_PATH && \
     git lfs install && \
-    git clone https://huggingface.co/$MODEL_ID $BASE_PATH
+    git lfs clone https://huggingface.co/$MODEL_ID $BASE_PATH
 
 # Application setup
 COPY src /src
