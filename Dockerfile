@@ -19,7 +19,6 @@ RUN python3 -m pip install \
 # Model configuration
 ARG BASE_PATH="/model"
 ARG MODEL_ID="scb10x/typhoon2.1-gemma3-4b"
-ARG HF_TOKEN=hf_YOUR_TOKEN_HERE
 ENV MODEL_NAME=$MODEL_ID \
     VLLM_MODEL_PATH=$BASE_PATH \
     VLLM_DTYPE="bfloat16" \
@@ -36,7 +35,6 @@ RUN --mount=type=cache,target=/root/.cache/huggingface \
     python3 -c "from huggingface_hub import snapshot_download; \
     snapshot_download(repo_id='$MODEL_ID', \
     local_dir='$BASE_PATH', \
-    token='$HF_TOKEN', \
     force_download=False, \
     resume_download=True)"
 # Copy source code if exists
